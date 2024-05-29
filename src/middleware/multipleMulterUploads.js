@@ -2,13 +2,13 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const unzipper = require('unzipper');
-const { app} = require('electron');
+const { app } = require('electron');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         // let destinationFolder = path.join(app.getPath('userData'), "../", 'COMPARECSV_FILES', 'multipleCsvCompare');
         // console.log(">>>>>>>>>>>>",destinationFolder)
-        let destinationFolder = 'COMPARECSV_FILES/'+'multipleCsvCompare';
+        let destinationFolder = 'COMPARECSV_FILES/' + 'multipleCsvCompare';
         if (!fs.existsSync(destinationFolder)) {
             fs.mkdirSync(destinationFolder, { recursive: true });
         }
@@ -53,8 +53,8 @@ const uploadCsv = async (req, res, next) => {
         const zipfileName = zipImageFile.originalname;
 
         const uploadDate = new Date();
-        const omrImagesZipDir = path.join(app.getPath('userData'), "../", "COMPARECSV_FILES", 'OmrImagesZipfile');
-        const omrImages = path.join(app.getPath('userData'), "../", "COMPARECSV_FILES", 'OmrImages', `Images_${formatDate(uploadDate)}`);
+        const omrImagesZipDir = "COMPARECSV_FILES/" + 'OmrImagesZipfile';
+        const omrImages = "COMPARECSV_FILES/" + 'OmrImages' + `Images_${formatDate(uploadDate)}`;
 
         if (!fs.existsSync(omrImagesZipDir)) {
             fs.mkdirSync(omrImagesZipDir, { recursive: true });

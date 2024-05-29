@@ -1,8 +1,8 @@
 {
   "name": "ios_dataentry_software",
   "productName": "ios_dataentry_software",
-  "version": "1.0.0",
-  "description": "My Electron application description",
+  "version": "1.1.0",
+  "description": "Web Data Conversion",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",
@@ -20,12 +20,12 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
-    "electron": "30.0.6"
+    "electron": "22.0.0"
   },
   "keywords": [],
   "author": {
-    "name": "krgarav",
-    "email": "krgarav@gmail.com"
+    "name": "OMR-India-Outsources-Pvt-Ltd"
+    
   },
   "license": "MIT",
   "dependencies": {

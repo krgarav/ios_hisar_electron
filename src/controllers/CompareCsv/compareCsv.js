@@ -2,11 +2,8 @@ const path = require("path");
 const fs = require("fs");
 const csvToJson = require("../../services/csvExtractor");
 const { parse } = require('json2csv');
-const { app} = require('electron');
-
 
 const compareCsv = async (req, res) => {
-    // console.log("entered");
     try {
         // Access other form data parameters
         const { firstInputFileName, secondInputFileName, primaryKey, skippingKey, imageColName, formFeilds } = req.body;
@@ -15,10 +12,10 @@ const compareCsv = async (req, res) => {
         const secondCSVFile = req.uploadedFiles.secondInputCsvFile
         // const firstFilePath = path.join(app.getPath('userData'), "../", "../", "COMPARECSV_FILES", "multipleCsvCompare", firstInputFileName);
         // const secondFilePath = path.join(app.getPath('userData'), "../", "../", "COMPARECSV_FILES", "multipleCsvCompare", secondInputFileName);
-        const firstFilePath =  'COMPARECSV_FILES/'+ "multipleCsvCompare/"+ firstInputFileName;
-         const secondFilePath =  'COMPARECSV_FILES/'+ "multipleCsvCompare/"+ secondInputFileName;
-      
-        
+        const firstFilePath = 'COMPARECSV_FILES/' + "multipleCsvCompare/" + firstInputFileName;
+        const secondFilePath = 'COMPARECSV_FILES/' + "multipleCsvCompare/" + secondInputFileName;
+
+
         const f1 = await csvToJson(firstFilePath)
         const f2 = await csvToJson(secondFilePath)
 
@@ -76,12 +73,12 @@ const compareCsv = async (req, res) => {
         const csvData = parse(diff);
         // const csvData = parse(arr)
         const correctedCsv = parse(f1);
-        const directoryPath = 'COMPARECSV_FILES/'+ 'ErrorCsv';
+        const directoryPath = 'COMPARECSV_FILES/' + 'ErrorCsv';
         // Create directory if it doesn't exist
         if (!fs.existsSync(directoryPath)) {
             fs.mkdirSync(directoryPath, { recursive: true });
         }
-        const CorrectionDirectoryPath ='COMPARECSV_FILES/'+  'CorrectedCsv';
+        const CorrectionDirectoryPath = 'COMPARECSV_FILES/' + 'CorrectedCsv';
         // Create directory if it doesn't exist
         if (!fs.existsSync(CorrectionDirectoryPath)) {
             fs.mkdirSync(CorrectionDirectoryPath, { recursive: true });
@@ -126,7 +123,6 @@ const compareCsv = async (req, res) => {
 
         });
     } catch (err) {
-        // console.log(err)
         res.status(501).send({ error: err })
     }
 }

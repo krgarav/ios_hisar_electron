@@ -19,34 +19,52 @@ const downloadCsv = async (req, res) => {
       return res.status(404).json({ error: "File not found" });
     }
 
-    const filename = fileData.csvFile;
-    const filePath = "csvFile/"+ filename;
+    const originalFilename = fileData.csvFile;
+    const originalFilePath = "csvFile/" +
+      originalFilename;
 
     try {
-      await fs.access(filePath); // Check if the file exists
+      await fs.access(originalFilePath); // Check if the file exists
     } catch (err) {
       return res.status(404).json({ error: "File not found" });
     }
 
-    const jsonData = await csvToJson(filePath);
+    const jsonData = await csvToJson(originalFilePath);
 
     // Remove the first row
     jsonData.shift();
 
     const csvData = jsonToCsv(jsonData);
 
-    await fs.writeFile(filePath, csvData, { encoding: "utf8" });
+    // Create a filename with the current date and time
+    const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+    const copiedFilename = `copy-${timestamp}.csv`;
+    const copiedFilePath = "csvFile/" +
+      copiedFilename;
 
-    // Send the file to the client for download
-    return res.download(filePath, filename, (err) => {
+    await fs.writeFile(copiedFilePath, csvData, { encoding: "utf8" });
+
+    // Send the copied file to the client for download
+    return res.download(copiedFilePath, copiedFilename, async (err) => {
       if (err) {
         console.error("Error sending file:", err);
-        return res.status(500).json({ error: "An error occurred while processing your request" });
+        return res
+          .status(500)
+          .json({ error: "An error occurred while processing your request" });
+      }
+
+      // Optionally, delete the copied file after sending it to the client
+      try {
+        await fs.unlink(copiedFilePath);
+      } catch (unlinkErr) {
+        console.error("Error deleting temporary file:", unlinkErr);
       }
     });
   } catch (error) {
     console.error("Error downloading CSV file:", error);
-    return res.status(500).json({ error: "An error occurred while processing your request" });
+    return res
+      .status(500)
+      .json({ error: "An error occurred while processing your request" });
   }
 };
 
