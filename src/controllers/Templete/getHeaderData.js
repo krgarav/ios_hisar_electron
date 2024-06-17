@@ -17,7 +17,7 @@ const getHeaderData = (req, res, next) => {
         return res.status(404).json({ error: "File not found" });
       }
       const fileName = fileData.csvFile;
-      const filePath = "csvFile/"+ fileName;
+      const filePath = "csvFile/" + fileName;
 
       if (fs.existsSync(filePath)) {
         const workbook = XLSX.readFile(filePath);

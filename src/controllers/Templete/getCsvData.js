@@ -99,40 +99,50 @@ const getCsvData = async (req, res, next) => {
       return res.status(400).json({ error: "Invalid min or max value" });
     }
 
-    // const imgageColNameFinder = Object.values(jsonData[0]);
+    const imgageColNameFinder = Object.values(jsonData[0]);
 
-    // let imageColNameContainer = [];
-    // let count = 1;
+    let imageColNameContainer = [];
+    let count = 1;
 
-    // while (true) {
-    //   const imageName = `Image${count}`;
-    //   if (imgageColNameFinder.includes(imageName)) {
-    //     imageColNameContainer.push(imageName);
-    //     count++;
-    //   } else {
-    //     break;
-    //   }
-    // }
+    while (true) {
+      const imageName = `Image${count}`;
+      if (imgageColNameFinder.includes(imageName)) {
+        imageColNameContainer.push(imageName);
+        count++;
+      } else {
+        break;
+      }
+    }
 
-    // // Find keys for the values in imgageColNameContainer
-    // let imageColKeyContainer = [];
+    // Find keys for the values in imgageColNameContainer
+    let imageColKeyContainer = [];
 
-    // imageColNameContainer.forEach((imageName) => {
-    //   for (const [key, value] of Object.entries(jsonData[0])) {
-    //     if (value === imageName) {
-    //       imageColKeyContainer.push(key);
-    //       break; // Found the key for the current imageName, move to the next imageName
-    //     }
-    //   }
-    // });
+    imageColNameContainer.forEach((imageName) => {
+      for (const [key, value] of Object.entries(jsonData[0])) {
+        if (value === imageName) {
+          imageColKeyContainer.push(key);
+          break; // Found the key for the current imageName, move to the next imageName
+        }
+      }
+    });
 
-    function isBlankOrSpecial(obj, conditions) {
+    function isBlankOrSpecial(obj, conditions, checkBeforeThisKey) {
       const blankCount = conditions.Blank || 0;
       const includeStar = conditions["*"] || false;
       const includeAllData = conditions.AllData || false;
 
-      const blankAndSpaceCount = Object.values(obj).reduce(
-        (count, value) => {
+      // Determine the index of checkBeforeThisKey in the object's keys
+      const keys = Object.keys(obj);
+      const checkBeforeIndex = keys.indexOf(checkBeforeThisKey);
+
+      // Filter keys to exclude the checkBeforeThisKey and all keys after it
+      const keysToCheck =
+        checkBeforeIndex !== -1 ? keys.slice(0, checkBeforeIndex) : keys;
+
+      // Count blank and space occurrences only for keys before checkBeforeThisKey
+      const blankAndSpaceCount = keysToCheck.reduce(
+        (count, key) => {
+          const value = obj[key];
           if (typeof value === "string") {
             if (value.trim() === "" || value === "BLANK") {
               count.blank += 1;
@@ -149,30 +159,51 @@ const getCsvData = async (req, res, next) => {
       const totalOccurrences =
         blankAndSpaceCount.blank + blankAndSpaceCount.space;
 
+      // Function to check if any value meets the criteria in the object before checkBeforeThisKey
+      const hasDesiredValue = () => {
+        return keysToCheck.some((key) => {
+          const value = obj[key];
+          if (typeof value === "string") {
+            // Check if trimmed value is empty or equals "BLANK"
+            if (value.trim() === "" || value === "BLANK") {
+              return true;
+            }
+            // Check if value includes "*"
+            if (value.includes("*")) {
+              return true;
+            }
+            // Check if value has spaces
+            if (value.includes(" ")) {
+              return true;
+            }
+          }
+          return false;
+        });
+      };
+
+      // Check includeAllData condition
       if (includeAllData) {
-        return Object.values(obj).some(
-          (value) =>
-            typeof value === "string" &&
-            (value.trim() === "" || value === "BLANK" || value.includes("*"))
-        );
+        return hasDesiredValue();
       }
 
+      // Check includeStar condition only before checkBeforeThisKey
       if (includeStar) {
-        // console.log(obj);
-        const hasStar = Object.values(obj).some(
-          (value) => typeof value === "string" && value.includes("*")
+        const hasStar = keysToCheck.some(
+          (key) => typeof obj[key] === "string" && obj[key].includes("*")
         );
-        // console.log(hasStar);
 
+        // Check if blankCount condition is met only before checkBeforeThisKey
         if (blankCount > 0) {
-          return hasStar || totalOccurrences >= blankCount + extraImageColCount;
+          return hasStar || totalOccurrences >= blankCount;
         }
         return hasStar;
       }
 
+      // Check blankCount condition only before checkBeforeThisKey
       if (blankCount > 0) {
-        return totalOccurrences >= blankCount + extraImageColCount;
+        return totalOccurrences >= blankCount;
       }
+
       return false;
     }
 
@@ -181,10 +212,14 @@ const getCsvData = async (req, res, next) => {
     const minToMaxData = jsonData.slice(minIndex, maxIndex + 1);
 
     minToMaxData.forEach((obj, index) => {
-      const conditionCheck = isBlankOrSpecial(obj, conditions);
+      const conditionCheck = isBlankOrSpecial(
+        obj,
+        conditions,
+        imageColKeyContainer[0]
+      );
       if (conditionCheck) {
         // Attach rowIndex to the object and add it to filteredData
-        filteredData.push({ ...obj, rowIndex: index });
+        filteredData.push({ ...obj, rowIndex: minIndex - 1 + index });
       }
     });
 
@@ -200,6 +235,8 @@ const getCsvData = async (req, res, next) => {
       filteredData,
       rowIndexdata: rowIndexdata === null ? newRowIndexdata : rowIndexdata,
     });
+
+    // res.status(200).json(checkUntillThisKey );
   } catch (error) {
     console.error("Error handling data:", error);
     res.status(500).json({ error: "Internal server error" });
